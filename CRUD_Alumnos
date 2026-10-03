@@ -1,0 +1,171 @@
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+
+public class CRUD_Alumnos {
+           
+
+    static Path ruta = Path.of("alumnos.txt");
+
+    // Buscar la posicion del alumno por ID
+    public static int buscar(ArrayList<String> alumnos, String id) {
+        for (int i = 0; i < alumnos.size(); i++) {
+            String[] datos = alumnos.get(i).split(" - ", 2);
+            if (datos.length == 2 && datos[0].equals(id)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static void guardar(ArrayList<String> alumnos) throws IOException {
+        Files.write(ruta, alumnos);
+    }
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+        int opcion = 0;
+
+        try {
+            // Crear archivo si no existe
+            if (!Files.exists(ruta)) {
+                Files.createFile(ruta);
+            }
+
+            do {
+                System.out.println("\n=== MENU GESTION DE ALUMNOS ===");
+                System.out.println("1. Registrar alumno");
+                System.out.println("2. Ver todos los alumnos");
+                System.out.println("3. Buscar alumno por ID");
+                System.out.println("4. Actualizar nombre");
+                System.out.println("5. Eliminar alumno");
+                System.out.println("6. Salir");
+                System.out.print("Seleccione una opcion: ");
+           try {
+                    opcion = Integer.parseInt(sc.nextLine());
+
+                    // Leer los alumnos del archivo
+                    ArrayList<String> alumnos =
+                            new ArrayList<>(Files.readAllLines(ruta));
+
+                    switch (opcion) {
+            case 1:
+                            System.out.print("Ingrese ID: ");
+                            String id = sc.nextLine().trim();
+
+                            System.out.print("Ingrese Nombre: ");
+                            String nombre = sc.nextLine().trim();
+
+                            if (id.isEmpty() || nombre.isEmpty()
+                                    || nombre.contains(" - ")) {
+                                System.out.println("Datos no validos.");
+                            } else if (buscar(alumnos, id) != -1) {
+                                System.out.println("El ID ya existe.");
+                            } else {
+                                Files.writeString(ruta,
+                                        id + " - " + nombre
+                                                + System.lineSeparator(),
+                                        StandardOpenOption.CREATE,
+                                        StandardOpenOption.APPEND);
+                                System.out.println("Alumno registrado con exito.");
+                            }
+                            break;
+
+                        case 2:// leer el archivo mostrar quien esta registrado
+                            if (alumnos.isEmpty()) {
+                                System.out.println("No hay alumnos registrados.");
+                            } else {
+                                System.out.println("\n--- LISTA DE ALUMNOS ---");
+                                for (String alumno : alumnos) {
+                                    System.out.println(alumno);
+                                }
+                            }
+                            break;
+
+                        case 3:// buscar por id
+                            System.out.print("Ingrese ID a buscar: ");
+                            String idBuscar = sc.nextLine().trim();
+
+                            int posicion = buscar(alumnos, idBuscar);
+
+                            if (posicion != -1) {
+                                System.out.println("Alumno encontrado: "
+                                        + alumnos.get(posicion));
+                            } else {
+                                System.out.println("Alumno no encontrado.");
+                            }
+                            break;
+
+                        case 4:// buscar por Id y rempalzar el nombre por uno nuevo
+                            System.out.print("Ingrese ID a actualizar: ");
+                            String idActualizar = sc.nextLine().trim();
+
+                            int posActualizar = buscar(alumnos, idActualizar);
+
+                            if (posActualizar != -1) {
+                                System.out.print("Ingrese nuevo nombre: ");
+                                String nuevoNombre = sc.nextLine().trim();
+
+                                if (nuevoNombre.isEmpty()
+                                        || nuevoNombre.contains(" - ")) {
+                                    System.out.println("Nombre no valido.");
+                                } else {
+                                    alumnos.set(posActualizar,
+                                            idActualizar + " - " + nuevoNombre);
+                                    guardar(alumnos);
+                                    System.out.println("Alumno actualizado.");
+                                }
+                            } else {
+                                System.out.println("Alumno no encontrado.");
+                            }
+                            break;
+
+                        case 5:
+                            System.out.print("Ingrese ID a eliminar: ");
+                            String idEliminar = sc.nextLine().trim();
+
+                            int posEliminar = buscar(alumnos, idEliminar);
+
+                            if (posEliminar != -1) {
+                                System.out.print("¿Confirmar eliminacion? (s/n): ");
+                                String confirmar = sc.nextLine();
+
+                                if (confirmar.equalsIgnoreCase("s")) {
+                                    alumnos.remove(posEliminar);
+                                    guardar(alumnos);
+                                    System.out.println("Alumno eliminado.");
+                                } else {
+                                    System.out.println("Operacion cancelada.");
+                                }
+                            } else {
+                                System.out.println("Alumno no encontrado.");
+                            }
+                            break;
+
+                        case 6:
+                            System.out.println("Programa terminado.");
+                            break;
+
+                        default:
+                            System.out.println("Opcion no valida.");
+                    }
+
+                } catch (NumberFormatException e) {
+                    System.out.println("Ingrese una opcion numerica.");
+                } catch (IOException e) {
+                    System.out.println("Error en el archivo: " + e.getMessage());
+                }
+
+            } while (opcion != 6);
+
+        } catch (IOException e) {
+            System.out.println("Error al iniciar: " + e.getMessage());
+        } finally {
+            sc.close();
+        }
+    }
+}
